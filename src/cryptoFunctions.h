@@ -12,9 +12,8 @@
 #include <openssl/kdf.h>
 #include <openssl/ocsp.h>
 #include <openssl/pem.h>
-#include <sodium.h>
 
-void genX25519KeyPair(void);
+EVP_PKEY *genX25519KeyPair(void);
 void computeSharedSecret(void);
 unsigned char *computeHash(unsigned char *message);
 EVP_PKEY getPubKey();
