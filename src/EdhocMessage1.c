@@ -8,10 +8,15 @@
 /* unsecured message sent by the device in message1*/
 unsigned char app_1[] = "Hello, my name is EDHOC!";
 
-unsigned char *genMsg1Sym(unsigned char *app_1, size_t app_1_sz, EVP_PKEY *pkey,
+/**
+ *This method constructs the EDHOC Message 1.
+ *
+ *@see: https://tools.ietf.org/html/draft-selander-ace-cose-ecdhe-08#section-5.2
+ */
+unsigned char *gen_msg1_sym(unsigned char *app_1, size_t app_1_sz, EVP_PKEY *pkey,
 		const char *filepath) {
-	int msg_type = EDHOC_SYM_MSG_1;
 
+	int msg_type = EDHOC_SYM_MSG_1;
 	printf("\n#### GENERATING EDHOC SYMMETRIC MSG_%d ####\n",
 			get_msg_num(msg_type));
 
@@ -27,8 +32,8 @@ unsigned char *genMsg1Sym(unsigned char *app_1, size_t app_1_sz, EVP_PKEY *pkey,
 	}
 
 	cbor_item_t *S_U = cbor_new_definite_bytestring();
-	size_t variable_length = rand() % (S_ID_MAX_SIZE + 1 - S_ID_MIN_SIZE)
-			+ S_ID_MIN_SIZE;
+	size_t variable_length = rand()
+			% (S_ID_MAX_SIZE + 1 - S_ID_MIN_SIZE) + S_ID_MIN_SIZE;
 	unsigned char *bstr_s_u = gen_random_S_ID(variable_length);
 	S_U = cbor_build_bytestring(bstr_s_u, variable_length);
 	if (!cbor_array_push(MSG, S_U)) {
