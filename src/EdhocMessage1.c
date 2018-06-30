@@ -12,17 +12,17 @@ struct eu E_U;
 /*
  * defines the structure of EDHOC Message 1.
  *
- * MSG_TYPE: 		indicates the message type.
- * S_U: 			variable length session identifier.
- * N_U: 			represents nonce.
- * E_U: 			ephemeral public key of the party U.
- * EDCH_Curves_U: 	EC curves for ECDH which Party U supports, in the
- * 					order of decreasing preference. (currently only one curve is supported)
- * HKDFs_U: 		supported ECDH-SS w/ HKDF algorithms. (currently only default
- * 					values are supported)
- * AEADs_U: 		supported AEAD algorithms (only defaults supported)
- * KID: 			identifier of the pre-shared key.
- * APP_1: 			bstr containing opaque application data.
+ * MSG_TYPE: indicates the message type.
+ * S_U: variable length session identifier.
+ * N_U: represents nonce.
+ * E_U: ephemeral public key of the party U.
+ * EDCH_Curves_U: EC curves for ECDH which Party U supports, in the
+ * 				  order of decreasing preference. (currently only one curve is supported)
+ * HKDFs_U: supported ECDH-SS w/ HKDF algorithms. (currently only default
+ * 			values are supported)
+ * AEADs_U: supported AEAD algorithms (only defaults supported)
+ * KID: identifier of the pre-shared key.
+ * APP_1: bstr containing opaque application data.
  *
  */
 struct msg_1_data {
@@ -59,7 +59,7 @@ unsigned char app_1[] = "Hello, my name is EDHOC!";
  *@see: https://tools.ietf.org/html/draft-selander-ace-cose-ecdhe-08#section-5.2
  */
 unsigned char *gen_msg1_sym(unsigned char *app_1, size_t app_1_sz,
-		EVP_PKEY *pkey, const char *filepath)
+		unsigned char *pub_key, const char *filepath)
 {
 	int msg_type = EDHOC_SYM_MSG_1;
 
@@ -100,7 +100,6 @@ unsigned char *gen_msg1_sym(unsigned char *app_1, size_t app_1_sz,
 	/* cbor map format */
 	cbor_item_t *E_U = cbor_new_definite_map(E_U_map_size);
 	int *bstr_e_u_sz = malloc(sizeof(int));
-	unsigned char *bstr_e_u = strip_pkey(pkey, bstr_e_u_sz);
 	/* key_1 and key_2 refer to cbor map keys */
 	cbor_item_t *key_1;
 	key_1 = cbor_new_int8();
@@ -119,7 +118,7 @@ unsigned char *gen_msg1_sym(unsigned char *app_1, size_t app_1_sz,
 	cbor_map_add(E_U,
 			(struct cbor_pair )
 					{ .key = cbor_move(key_2), .value = cbor_move(
-							cbor_build_bytestring(bstr_e_u, *bstr_e_u_sz)) });
+							cbor_build_bytestring(pub_key, *bstr_e_u_sz)) });
 	cbor_map_add(E_U, (struct cbor_pair )
 			{ .key = cbor_move(cbor_build_uint8(E_U_map_param_3)), .value =
 					cbor_move(cbor_build_uint8(COSE_key_object_type)) });

@@ -11,36 +11,23 @@
 #include <openssl/err.h>
 #include <unistd.h>
 
+const int S_KEY_LENGTH = 32;
+
 int main(void) {
 
-	/* Generate private and public keys */
-	EVP_PKEY *session_pkey = gen_x25519();
-	printf("\nAlice's PUBKEY:\n");
-	PEM_write_PUBKEY(stdout, session_pkey);
-
-//	PEM_write_PrivateKey(stdout, session_pkey, NULL, NULL, 0, NULL, NULL);
-//	if(!PEM_write_PrivateKey(stdout, session_pkey, NULL, NULL, 0, NULL, NULL)){
-//		printf("failed");
+//	unsigned char *alice_priv[S_KEY_LENGTH];
+//	unsigned char *alice_pub[S_KEY_LENGTH];
+//	if (sodium_init() < 0) {
+//		fprintf(stderr, "calling sodium lib failed %d\n", sodium_init());
+//	} else {
+//		printf("sodium lib call successfull\n");
 //	}
 //
-//	FILE *keyfile_pu = fopen("./inputparameters/server_PUBKEY.txt", "w");
-//	FILE *keyfile_pr = fopen("./inputparameters/server_PrivateKey.txt", "w");
-
-//	/* Write keys to files */
-//	PEM_write_EC_PUBKEY(keyfile_pu, session_pkey);
-//	PEM_write_ECPrivateKey(keyfile_pr, session_pkey, NULL, NULL, 0, NULL, NULL);
-//
-//	/* Read Alice's public key */
-//	EVP_PKEY *peerkey = NULL;
-//	peerkey = PEM_read_PUBKEY(keyfile_pu, NULL, NULL, NULL);
-//	printf("\nAlice's PUBKEY:\n");
-//	PEM_write_PUBKEY(stdout, peerkey);
-//
-//	fclose(keyfile_pu);
-//	fclose(keyfile_pr);
-//
-//	/*check cose working properly*/
-//	printf("cose enum value: %d\n", COSE_sign_object);
+//	/* Generate private and public keys */
+//	gen_random(alice_priv, S_KEY_LENGTH);
+//	gen_sodium_pub_key(alice_pub, alice_priv);
+//	printf("\nsize of %d", sizeof alice_pub);
+	printf("size: %d\n", sizeof(int));
 	return 0;
 }
 

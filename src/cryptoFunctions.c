@@ -7,6 +7,23 @@
 
 #include "cryptoFunctions.h"
 
+/*
+ *Generates a random number for the given length.
+ *
+ */
+void gen_random(unsigned char *buf, size_t length) {
+	randombytes_buf(buf, length);
+}
+
+/* Generates sodium pub key */
+int gen_sodium_pub_key(unsigned char* pub_key, const unsigned char *priv_key){
+	if (crypto_scalarmult_base(pub_key, priv_key)!=1){
+		return -1;
+	}
+	return 1;
+}
+
+/*openssl key gen function to generate X25519 key pair*/
 EVP_PKEY *gen_x25519() {
 
 	int nid = 710;
@@ -15,7 +32,6 @@ EVP_PKEY *gen_x25519() {
 	const char *name = OBJ_nid2sn(nid);
 	if (name == NULL) {
 		fprintf(stderr, "No such EC curve.\n");
-		return 1;
 	}
 
 	/* Create the context for parameter generation */
@@ -55,7 +71,7 @@ EVP_PKEY *gen_x25519() {
 		fprintf(stderr, "error while initializing public key context\n");
 	}
 	if (EVP_PKEY_keygen_init(pctx) <= 0) {
-		printf("error while initialization %d\n");
+		printf("error while initialization\n");
 	}
 	if (EVP_PKEY_keygen(pctx, &pkey) <= 0) {
 		printf("error while key generation\n");

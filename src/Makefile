@@ -1,6 +1,6 @@
 CC	= gcc
 CFLAGS	= -Wall
-LDFLAGS	= -lcrypto -lb64 -lcbor
+LDFLAGS	= -lsodium -lcrypto -lb64 -lcbor
 
 CLIENT_OBJFILES	= 	cryptoFunctions.o edhocClient.o
 CLIENT_TARGET	=	edhoc-client
