@@ -59,9 +59,10 @@ unsigned char app_1[] = "Hello, my name is EDHOC!";
  *@see: https://tools.ietf.org/html/draft-selander-ace-cose-ecdhe-08#section-5.2
  */
 unsigned char *gen_msg1_sym(unsigned char *app_1, size_t app_1_sz,
-		EVP_PKEY *pkey, const char *filepath) {
-
+		EVP_PKEY *pkey, const char *filepath)
+{
 	int msg_type = EDHOC_SYM_MSG_1;
+
 	printf("\n#### GENERATING EDHOC SYMMETRIC MSG_%d ####\n",
 			get_msg_num(msg_type));
 
@@ -77,10 +78,12 @@ unsigned char *gen_msg1_sym(unsigned char *app_1, size_t app_1_sz,
 	}
 
 	cbor_item_t *S_U = cbor_new_definite_bytestring();
-	size_t variable_length = rand()
-			% (S_ID_MAX_SIZE + 1 - S_ID_MIN_SIZE)+ S_ID_MIN_SIZE;
-	unsigned char *bstr_s_u = gen_random_S_ID(variable_length);
-	S_U = cbor_build_bytestring(bstr_s_u, variable_length);
+	//size_t variable_length = rand() % (S_ID_MAX_SIZE + 1 - S_ID_MIN_SIZE) + S_ID_MIN_SIZE;
+	//unsigned char *bstr_s_u = gen_random_S_ID(variable_length);
+	//S_U = cbor_build_bytestring(bstr_s_u, variable_length);
+	unsigned char s_id_party_U[] = S_ID_PARTY_U;
+	unsigned char *bstr_s_u = (unsigned char *) S_ID_PARTY_U;
+	S_U = cbor_build_bytestring(bstr_s_u, sizeof(S_ID_PARTY_U));
 	if (!cbor_array_push(MSG, S_U)) {
 		printf("\ncbor_array_push S_U FAILED.\n");
 	}
