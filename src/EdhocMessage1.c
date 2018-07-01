@@ -6,8 +6,8 @@
  */
 #include "edhoc.h"
 
-struct msg_1_data MSG_1;
-struct eu E_U;
+struct e_u E_U;
+struct msg_1 MSG_1;
 
 /*
  * defines the structure of EDHOC Message 1.
@@ -25,30 +25,28 @@ struct eu E_U;
  * APP_1: bstr containing opaque application data.
  *
  */
-struct msg_1_data {
+struct msg_1 {
 	uint8_t MSG_TYPE;
 	unsigned char *S_U;
 	unsigned char * N_U;
-	E_U *E_U;
+	/*
+	 *defines the serialized representation of cose key.
+	 *
+	 *param_1: indicates type of the curve used.
+	 *param_2: 'EC2' or 'OKP' curve either x, y coordinates or both.
+	 *param_3:	representing key type. ('EC2', 'OKP', 'Symmetric')
+	 */
+	struct e_u {
+		uint8_t param_1;
+		unsigned char *param_2;
+		uint8_t param_3;
+	} E_U;
 	uint8_t ECDH_Curves_U;
 	int8_t HKDFs_U;
 	uint8_t AEADs_U;
 	unsigned char *KID;
 	unsigned char *APP_1;
-};
-
-/*
- *defines the serialized representation of cose key.
- *
- *param_1: indicates type of the curve used.
- *param_2: 'EC2' or 'OKP' curve either x, y coordinates or both.
- *param_3:	representing key type. ('EC2', 'OKP', 'Symmetric')
- */
-struct eu {
-	uint8_t param_1;
-	unsigned char *param_2;
-	uint8_t param_3;
-};
+} MSG_1;
 
 /* unsecured message sent by the device in message1*/
 unsigned char app_1[] = "Hello, my name is EDHOC!";
@@ -58,18 +56,13 @@ unsigned char app_1[] = "Hello, my name is EDHOC!";
  *
  *@see: https://tools.ietf.org/html/draft-selander-ace-cose-ecdhe-08#section-5.2
  */
-unsigned char *gen_msg1_sym(unsigned char *app_1, size_t app_1_sz,
-		unsigned char *pub_key, const char *filepath)
+unsigned char *gen_msg1_sym(unsigned char *pub_key)
 {
 	int msg_type = EDHOC_SYM_MSG_1;
-
-	printf("\n#### GENERATING EDHOC SYMMETRIC MSG_%d ####\n",
-			get_msg_num(msg_type));
+	printf("size of real key: %ld\n", sizeof(pub_key));
+	printf("\n#### GENERATING EDHOC SYMMETRIC MSG_%d ####\n", msg_type);
 
 	cbor_item_t *MSG = cbor_new_indefinite_array();
-	if (!CBOR_ITEM_T_init(MSG)) {
-		printf("\ncbor_item_t initialization FAILED.\n");
-	}
 
 	cbor_item_t *MSG_TYPE = cbor_new_int8();
 	MSG_TYPE = cbor_build_uint8(msg_type);
@@ -81,7 +74,6 @@ unsigned char *gen_msg1_sym(unsigned char *app_1, size_t app_1_sz,
 	//size_t variable_length = rand() % (S_ID_MAX_SIZE + 1 - S_ID_MIN_SIZE) + S_ID_MIN_SIZE;
 	//unsigned char *bstr_s_u = gen_random_S_ID(variable_length);
 	//S_U = cbor_build_bytestring(bstr_s_u, variable_length);
-	unsigned char s_id_party_U[] = S_ID_PARTY_U;
 	unsigned char *bstr_s_u = (unsigned char *) S_ID_PARTY_U;
 	S_U = cbor_build_bytestring(bstr_s_u, sizeof(S_ID_PARTY_U));
 	if (!cbor_array_push(MSG, S_U)) {
@@ -115,10 +107,13 @@ unsigned char *gen_msg1_sym(unsigned char *app_1, size_t app_1_sz,
 	cbor_mark_negint(key_2);
 	int abs_key_2 = abs(E_U_map_param_2 - 1);
 	cbor_set_uint8(key_2, abs_key_2);
+	printf("size of real key: %ld\n", sizeof(pub_key));
 	cbor_map_add(E_U,
 			(struct cbor_pair )
 					{ .key = cbor_move(key_2), .value = cbor_move(
 							cbor_build_bytestring(pub_key, *bstr_e_u_sz)) });
+	printf("size of compressed cbor key: %ld\n",
+			sizeof(cbor_build_bytestring(pub_key, *bstr_e_u_sz)));
 	cbor_map_add(E_U, (struct cbor_pair )
 			{ .key = cbor_move(cbor_build_uint8(E_U_map_param_3)), .value =
 					cbor_move(cbor_build_uint8(COSE_key_object_type)) });
@@ -210,7 +205,7 @@ unsigned char *gen_msg1_sym(unsigned char *app_1, size_t app_1_sz,
 
 	if (app_1 != NULL) {
 		cbor_item_t *APP_1 = cbor_new_definite_bytestring();
-		APP_1 = cbor_build_bytestring(app_1, app_1_sz);
+		APP_1 = cbor_build_bytestring(app_1, sizeof app_1);
 		if (!cbor_array_push(MSG, APP_1)) {
 			printf("\ncbor_array_push APP_1 FAILED.\n");
 		}
@@ -222,23 +217,20 @@ unsigned char *gen_msg1_sym(unsigned char *app_1, size_t app_1_sz,
 	message_1 = buffer;
 	message_1_len = length;
 
-	write_cbor_array_to_file_HEX(buffer, length, msg_type, filepath);
 
-	write_cbor_array_to_file_RAW(buffer, length, msg_type, filepath);
-
-	printf("\nmessage_%d msg_type: %d", get_msg_num(msg_type), msg_type);
 	print_cbor_array_to_stdout(buffer, length);
 
 	return buffer;
 }
 
-void *parse_edhoc_sym_msg1(cbor_item_t *MSG) {
+void *parse_edhoc_sym_msg1(cbor_item_t *MSG)
+{
 	printf("\n#### PARSING EDHOC MESSAGE 1 ####\n");
 
 	cbor_item_t *msg_type;
 	msg_type = cbor_array_get(MSG, 0);
 	uint8_t MSG_TYPE = cbor_get_uint8(msg_type);
-	MSG_1->MSG_TYPE = MSG_TYPE;
+	MSG_1.MSG_TYPE = MSG_TYPE;
 
 	cbor_item_t *s_u;
 	s_u = cbor_array_get(MSG, 1);
@@ -264,12 +256,6 @@ void *parse_edhoc_sym_msg1(cbor_item_t *MSG) {
 	E_U.param_3 = cbor_get_uint8(kty);
 	MSG_1.E_U = E_U;
 
-	/*
-	 * Retrieve the other Party's PUBKEY
-	 */
-	const char *filepath = "./edhoc_server_INBOX/client_PUBKEY.txt";
-	unsigned char *key_pem_format = key_add_headers(E_U.param_2,
-			ephemeral_key_sz, filepath);
 
 	cbor_item_t *ecdh_curves_u;
 	ecdh_curves_u = cbor_array_get(MSG, 4);
@@ -330,4 +316,39 @@ void *parse_edhoc_sym_msg1(cbor_item_t *MSG) {
 	printf("\n#### END OF PARSING EDHOC MESSAGE 1 ####\n");
 
 	return 0;
+}
+
+void *print_cbor_bytestring_to_stdout(unsigned char *buffer, size_t length)
+{
+	for (int i = 0; i < length; i++)
+	{
+		printf("%c", buffer[i]);
+	}
+
+	return 0;
+}
+
+void *print_cbor_bytestring_to_stdout_hex(unsigned char *buffer, size_t length)
+{
+    for (int i = 0; i < length; i++)
+    {
+        printf("%02x", buffer[i]);
+    }
+    //printf(" (HEX encoding)");
+
+    return 0;
+}
+
+void *print_cbor_array_to_stdout(unsigned char *buffer, size_t length)
+{
+	printf("Total size of cbor array is: %ld\n", length);
+	printf("\n-----BEGIN CBOR ARRAY-----\n");
+    for (int i = 0; i < length; i++)
+    {
+        printf("%02x", buffer[i]);
+    }
+    printf("\n-----END CBOR ARRAY-----\n");
+	fflush(stdout);
+
+    return 0;
 }

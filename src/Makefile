@@ -1,8 +1,8 @@
 CC	= gcc
 CFLAGS	= -Wall
-LDFLAGS	= -lsodium -lcrypto -lb64 -lcbor
+LDFLAGS	= -lsodium -lcrypto -lb64 /usr/local/lib64/libcbor.a
 
-CLIENT_OBJFILES	= 	cryptoFunctions.o edhocClient.o
+CLIENT_OBJFILES	= 	EdhocMessage1.o cryptoFunctions.o edhocClient.o
 CLIENT_TARGET	=	edhoc-client
 
 $(CLIENT_TARGET) : $(CLIENT_OBJFILES)

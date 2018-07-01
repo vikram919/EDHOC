@@ -16,8 +16,8 @@ void gen_random(unsigned char *buf, size_t length) {
 }
 
 /* Generates sodium pub key */
-int gen_sodium_pub_key(unsigned char* pub_key, const unsigned char *priv_key){
-	if (crypto_scalarmult_base(pub_key, priv_key)!=1){
+int gen_sodium_pub_key(unsigned char* pub_key, const unsigned char *priv_key) {
+	if (crypto_scalarmult_base(pub_key, priv_key) != 1) {
 		return -1;
 	}
 	return 1;
@@ -81,5 +81,39 @@ EVP_PKEY *gen_x25519() {
 	printf("\nBob's PRIVATE KEY:\n");
 	PEM_write_PrivateKey(stdout, pkey, NULL, NULL, 0, NULL, NULL);
 	return pkey;
+}
+
+ASN1_INTEGER *create_nonce(int bits) {
+	int RAND_bytes(unsigned char buffer[], int length);
+	unsigned char buf[20];
+	ASN1_INTEGER *nonce = NULL;
+	int len = (bits - 1) / 8 + 1;
+	int i;
+
+	if (len > (int) sizeof(buf)) {
+		goto err;
+	}
+	if (RAND_bytes(buf, len) <= 0) {
+		goto err;
+	}
+
+	/* Find the first non-zero byte and creating ASN1_INTEGER object. */
+	for (i = 0; i < len && !buf[i]; ++i) {
+		continue;
+	}
+	if ((nonce = ASN1_INTEGER_new()) == NULL) {
+		goto err;
+	}
+	OPENSSL_free(nonce->data);
+	nonce->length = len - i;
+	nonce->data = malloc(nonce->length + 1);
+	memcpy(nonce->data, buf + i, nonce->length);
+
+	return nonce;
+
+	err: printf("\nCould not create nonce.\n");
+	ASN1_INTEGER_free(nonce);
+
+	return NULL;
 }
 

@@ -21,6 +21,7 @@
 EVP_PKEY *gen_x25519();
 void gen_random(unsigned char *buf, size_t length);
 int gen_sodium_pub_key(unsigned char *pub_key, const unsigned char *priv_key);
+ASN1_INTEGER *create_nonce(int bits);
 void computeSharedSecret(void);
 unsigned char *computeHash(unsigned char *message);
 EVP_PKEY getPubKey();
